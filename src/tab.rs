@@ -216,7 +216,12 @@ pub(crate) fn fs_tab_complete(search: &str, nth: usize) -> Option<PathBuf> {
         let entries = entries.filter(|e| e.is_ok()).map(|e| e.unwrap());
 
         for ent in entries {
+            #[cfg(target_arch = "wasm32")]
+            let mut ret_path = ent.expect("Failed").path();
+            
+            #[cfg(not(target_arch = "wasm32"))]
             let mut ret_path = ent.path();
+            
             if added_dot {
                 ret_path = ret_path.strip_prefix(dot_slash).ok()?.to_path_buf();
             }
