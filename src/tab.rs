@@ -73,7 +73,7 @@ impl ConsoleWindow {
     }
     // chop up input line input arguments honoring quotes
 
-    fn digest_line(line: &str) -> Vec<&str> {
+    pub(crate) fn digest_line(line: &str) -> Vec<&str> {
         enum State {
             InQuotes(char),
             InWhite,
@@ -190,7 +190,6 @@ pub(crate) fn fs_tab_complete(search: &str, nth: usize) -> Option<PathBuf> {
 
     if let Ok(entries) = dir {
         // deal with platform oddities, also unwrap everything
-
         // mac retruns things in random order - so sort
         #[cfg(target_os = "macos")]
         let entries = entries
@@ -252,18 +251,17 @@ pub(crate) fn fs_tab_complete(search: &str, nth: usize) -> Option<PathBuf> {
 }
 #[test]
 fn test_digest_line() {
-    let mut console = ConsoleWindow::new(">> ");
-    let result = console.digest_line("cd foo");
+    let result = ConsoleWindow::digest_line("cd foo");
     assert_eq!(result, vec!["cd", "foo"]);
-    let result = console.digest_line("cd \"foo bar\"");
+    let result = ConsoleWindow::digest_line("cd \"foo bar\"");
     assert_eq!(result, vec!["cd", "\"foo bar\""]);
-    let result = console.digest_line("cd \"foo bar");
+    let result = ConsoleWindow::digest_line("cd \"foo bar");
     assert_eq!(result, vec!["cd", "\"foo", "bar"]);
-    let result = console.digest_line("cd foo bar\"");
+    let result = ConsoleWindow::digest_line("cd foo bar\"");
     assert_eq!(result, vec!["cd", "foo", "bar\""]);
-    let result = console.digest_line("\"cd foo bar\"");
+    let result = ConsoleWindow::digest_line("\"cd foo bar\"");
     assert_eq!(result, vec!["\"cd", "foo", "bar\""]);
-    let result = console.digest_line("cd\" foo bar\"");
+    let result = ConsoleWindow::digest_line("cd\" foo bar\"");
     assert_eq!(result, vec!["cd\"", "foo", "bar\""]);
 }
 #[test]

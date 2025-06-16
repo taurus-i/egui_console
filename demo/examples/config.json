@@ -1,0 +1,39 @@
+{
+  "appName": "Enhanced Terminal",
+  "version": "1.0.0",
+  "settings": {
+    "theme": "dark",
+    "fontSize": 14,
+    "fontFamily": "Menlo, Monaco, 'Courier New', monospace",
+    "cursorBlinking": true,
+    "tabSize": 2,
+    "autoSave": true
+  },
+  "keybindings": [
+    {
+      "key": "ctrl+r",
+      "command": "search-history"
+    },
+    {
+      "key": "ctrl+l",
+      "command": "clear-screen"
+    },
+    {
+      "key": "ctrl+c",
+      "command": "copy-selection"
+    }
+  ],
+  "plugins": [
+    {
+      "name": "syntax-highlight",
+      "enabled": true,
+      "options": {
+        "languages": ["rust", "python", "javascript"]
+      }
+    },
+    {
+      "name": "auto-complete",
+      "enabled": true
+    }
+  ]
+}

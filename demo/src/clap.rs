@@ -15,7 +15,7 @@ pub fn syntax() -> Command {
         {all-args}{after-help}\
     ";
 
-    Command::new("xxx")
+    Command::new("enhanced-terminal")
         .multicall(true)
         .arg_required_else_help(true)
         .subcommand_required(true)
@@ -25,11 +25,12 @@ pub fn syntax() -> Command {
         .subcommand(
             Command::new("quit")
                 .visible_aliases(["exit", "q"])
-                .about("Quit demo")
+                .about("Quit terminal")
                 .help_template(APPLET_TEMPLATE),
         )
         .subcommand(
             Command::new("dir")
+                .visible_aliases(["ls", "list"])
                 .about("Directory list of current directory")
                 .arg(arg!([filter]))
                 .help_template(APPLET_TEMPLATE),
@@ -46,13 +47,13 @@ pub fn syntax() -> Command {
         )
         .subcommand(
             Command::new("clear_screen")
-                .visible_aliases(["cls"])
+                .visible_aliases(["cls", "clear"])
                 .about("Clear the screen")
                 .help_template(APPLET_TEMPLATE),
         )
         .subcommand(
             Command::new("history")
-                .about("dump command history")
+                .about("Display command history")
                 .help_template(APPLET_TEMPLATE),
         )
         .subcommand(
@@ -62,9 +63,45 @@ pub fn syntax() -> Command {
         )
         .subcommand(
             Command::new("cd")
-                .about("change current dir")
+                .about("Change current directory")
                 .arg(Arg::new("directory").required(true))
                 .arg_required_else_help(true)
+                .help_template(APPLET_TEMPLATE),
+        )
+        .subcommand(
+            Command::new("cat")
+                .about("Display file contents")
+                .arg(Arg::new("file").required(true))
+                .arg_required_else_help(true)
+                .help_template(APPLET_TEMPLATE),
+        )
+        .subcommand(
+            Command::new("pwd")
+                .about("Print working directory")
+                .help_template(APPLET_TEMPLATE),
+        )
+        .subcommand(
+            Command::new("echo")
+                .about("Echo text to console")
+                .arg(arg!([text] ... "Text to echo"))
+                .help_template(APPLET_TEMPLATE),
+        )
+        .subcommand(
+            Command::new("commands")
+                .about("Display available commands")
+                .help_template(APPLET_TEMPLATE),
+        )
+        .subcommand(
+            Command::new("theme")
+                .about("Change terminal theme")
+                .arg(arg!([name] "Theme name (dark, light, dracula, solarized, nord)"))
+                .help_template(APPLET_TEMPLATE),
+        )
+        .subcommand(
+            Command::new("codeview")
+                .about("View code with syntax highlighting")
+                .arg(Arg::new("language").required(true))
+                .arg(Arg::new("file").required(true))
                 .help_template(APPLET_TEMPLATE),
         )
 }
