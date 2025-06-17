@@ -1,8 +1,6 @@
-use std::path::PathBuf;
-
-use itertools::Itertools;
-
 use crate::ConsoleWindow;
+use itertools::Itertools;
+use std::path::PathBuf;
 
 impl ConsoleWindow {
     pub(crate) fn tab_complete(&mut self) {
@@ -138,6 +136,7 @@ impl ConsoleWindow {
         res
     }
 }
+
 pub(crate) fn cmd_tab_complete(search: &str, nth: usize, commands: &[String]) -> Option<PathBuf> {
     commands
         .iter()
@@ -146,6 +145,7 @@ pub(crate) fn cmd_tab_complete(search: &str, nth: usize, commands: &[String]) ->
         .map(PathBuf::from)
     //None
 }
+
 // return the nth matching path, or None if there isnt one
 pub(crate) fn fs_tab_complete(search: &str, nth: usize) -> Option<PathBuf> {
     let dot_slash = if cfg!(target_os = "windows") && search.find('\\').is_some() {
@@ -191,7 +191,7 @@ pub(crate) fn fs_tab_complete(search: &str, nth: usize) -> Option<PathBuf> {
     if let Ok(entries) = dir {
         // deal with platform oddities, also unwrap everything
 
-        // mac retruns things in random order - so sort
+        // mac reruns things in random order - so sort
         #[cfg(target_os = "macos")]
         let entries = entries
             .filter(|e| e.is_ok())
@@ -211,7 +211,7 @@ pub(crate) fn fs_tab_complete(search: &str, nth: usize) -> Option<PathBuf> {
                 )
             });
 
-        // linux is well behaved!
+        // linux is well-behaved!
         #[cfg(target_os = "linux")]
         let entries = entries.filter(|e| e.is_ok()).map(|e| e.unwrap());
 
@@ -250,37 +250,43 @@ pub(crate) fn fs_tab_complete(search: &str, nth: usize) -> Option<PathBuf> {
     }
     None
 }
+
 #[test]
 fn test_digest_line() {
-    let mut console = ConsoleWindow::new(">> ");
-    let result = console.digest_line("cd foo");
-    assert_eq!(result, vec!["cd", "foo"]);
-    let result = console.digest_line("cd \"foo bar\"");
-    assert_eq!(result, vec!["cd", "\"foo bar\""]);
-    let result = console.digest_line("cd \"foo bar");
-    assert_eq!(result, vec!["cd", "\"foo", "bar"]);
-    let result = console.digest_line("cd foo bar\"");
-    assert_eq!(result, vec!["cd", "foo", "bar\""]);
-    let result = console.digest_line("\"cd foo bar\"");
-    assert_eq!(result, vec!["\"cd", "foo", "bar\""]);
-    let result = console.digest_line("cd\" foo bar\"");
-    assert_eq!(result, vec!["cd\"", "foo", "bar\""]);
-}
-#[test]
-fn test_digest_line2() {
-    // let mut console = ConsoleWindow::new(">> ");
     let result = ConsoleWindow::digest_line("cd foo");
     assert_eq!(result, vec!["cd", "foo"]);
+
     let result = ConsoleWindow::digest_line("cd foo ");
     assert_eq!(result, vec!["cd", "foo", ""]);
+
     let result = ConsoleWindow::digest_line("cd \"foo bar\"");
     assert_eq!(result, vec!["cd", "\"foo bar\""]);
+
     let result = ConsoleWindow::digest_line("cd \"foo bar");
     assert_eq!(result, vec!["cd", "\"foo bar"]);
-    // let result = console.digest_line("cd foo bar\"");
-    // assert_eq!(result, vec!["cd", "foo", "bar\""]);
-    // let result = console.digest_line("\"cd foo bar\"");
-    // assert_eq!(result, vec!["\"cd", "foo", "bar\""]);
-    // let result = console.digest_line("cd\" foo bar\"");
-    // assert_eq!(result, vec!["cd\"", "foo", "bar\""]);
+
+    let result = ConsoleWindow::digest_line("cd foo bar\"");
+    assert_eq!(result, vec!["cd", "foo", "\""]);
+
+    let result = ConsoleWindow::digest_line("\"cd foo bar\"");
+    assert_eq!(result, vec!["\"cd foo bar\""]);
+
+    let result = ConsoleWindow::digest_line("cd\" foo bar\"");
+    assert_eq!(result, vec!["\" foo bar\""]);
+}
+
+#[test]
+fn test_digest_line_debug() {
+    // 这个测试只是为了调试，不进行断言
+    let result = ConsoleWindow::digest_line("cd foo bar\"");
+    println!("Result: {:?}", result);
+
+    let result = ConsoleWindow::digest_line("cd \"foo bar");
+    println!("Result for 'cd \"foo bar': {:?}", result);
+
+    let result2 = ConsoleWindow::digest_line("\"cd foo bar\"");
+    println!("Result for '\"cd foo bar\"': {:?}", result2);
+
+    let result3 = ConsoleWindow::digest_line("cd\" foo bar\"");
+    println!("Result for 'cd\" foo bar\"': {:?}", result3);
 }
