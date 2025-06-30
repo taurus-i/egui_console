@@ -1,7 +1,7 @@
 use crate::clap::syntax;
 use anyhow::Result;
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
-use egui_console::{ConsoleBuilder, ConsoleEvent, ConsoleWindow};
+use egui_console::{ConsoleBuilder, ConsoleEvent, ConsoleWindow, EmbeddableConsole};
 #[cfg_attr(feature = "persistence", derive(serde::Deserialize, serde::Serialize))]
 #[cfg_attr(feature = "persistence", serde(default))] // if we add new fields, give them default values when deserializing old state
 pub struct ConsoleDemo {
@@ -12,6 +12,9 @@ pub struct ConsoleDemo {
     value: f32,
     #[cfg_attr(feature = "persistence", serde(skip))]
     console_win: ConsoleWindow,
+    #[cfg_attr(feature = "persistence", serde(skip))]
+    embeddable_console: EmbeddableConsole,
+    use_embeddable: bool,
 }
 
 impl Default for ConsoleDemo {
@@ -37,8 +40,10 @@ impl Default for ConsoleDemo {
                 .prompt(">> ")
                 .history_size(20)
                 .tab_quote_character('\"')
-                .theme(dark_theme)
+                .theme(dark_theme.clone())
                 .build(),
+            embeddable_console: EmbeddableConsole::new(),
+            use_embeddable: true,
         }
     }
 }
@@ -115,87 +120,126 @@ impl eframe::App for ConsoleDemo {
             });
         });
         egui::CentralPanel::default().show(ctx, |ui| {
-            let mut console_response: ConsoleEvent = ConsoleEvent::None;
-                            egui::Window::new("Enhanced Terminal")
-                .default_width(800.0)
-                .default_height(600.0)
-                .resizable(true)
-                .show(ctx, |ui| {
-                    ui.add_space(4.0); // Add some padding at the top
-                    console_response = self.console_win.draw(ui);
-                });
-            if let ConsoleEvent::Command(command) = console_response {
-                match self.dispatch(&command, ctx) {
-                    Err(e) => {
-                        let error_msg = if let Some(original_error) = e.downcast_ref::<clap::error::Error>() {
-                            format!("{}", original_error)
-                        } else if e.backtrace().status() == std::backtrace::BacktraceStatus::Captured {
-                            format!("{} {}", e, e.backtrace())
-                        } else {
-                            format!("{}", e)
-                        };
-
-                        if !error_msg.is_empty() {
-                            self.console_win.write_error(format!("{}
-            ", error_msg));
-                        }
-                    },
-                    Ok(string) => {
-                        if !string.is_empty() {
-                            // Check content to determine appropriate styling
-                            if string.to_lowercase().contains("error") {
-                                self.console_win.write_error(format!("{}
-            ", string));
-                            } else if string.to_lowercase().contains("success") || 
-                                      string.to_lowercase().contains("enabled") {
-                                self.console_win.write_success(format!("{}
-            ", string));
-                            } else if string.to_lowercase().contains("warning") {
-                                self.console_win.write_warning(format!("{}
-            ", string));
-                            } else {
-                                self.console_win.write(&format!("{}
-            ", string));
-                            }
-                        }
-                    }
-                };
-                self.console_win.prompt();
-            }
-
             ui.horizontal(|ui| {
-                if ui.button("Output").clicked() {
-                    self.console_win.write_info("Regular output example\n");
-                    self.console_win.prompt();
+                ui.label("Console Mode:");
+                ui.radio_value(&mut self.use_embeddable, true, "Embeddable (with Koto)");
+                ui.radio_value(&mut self.use_embeddable, false, "Original");
+                
+                if ui.button("Toggle Console").clicked() {
+                    self.embeddable_console.toggle_visibility();
                 }
-
-                if ui.button("Success").clicked() {
-                    self.console_win.write_success("Success message example\n");
-                    self.console_win.prompt();
+            });
+            
+            ui.separator();
+            
+            let mut console_response: ConsoleEvent = ConsoleEvent::None;
+            
+            if self.use_embeddable {
+                // Use the new embeddable console with Koto support
+                console_response = self.embeddable_console.draw_window(ctx);
+            } else {
+                // Use the original console
+                egui::Window::new("Enhanced Terminal")
+                    .default_width(800.0)
+                    .default_height(600.0)
+                    .resizable(true)
+                    .show(ctx, |ui| {
+                        ui.add_space(4.0); // Add some padding at the top
+                        console_response = self.console_win.draw(ui);
+                    });
+            }
+            
+            // Handle console events
+            match console_response {
+                ConsoleEvent::Command(command) => {
+                    if self.use_embeddable {
+                        // Embeddable console handles its own commands
+                    } else {
+                        // Handle original console commands
+                        self.handle_original_console_command(&command, ctx);
+                    }
                 }
-
-                if ui.button("Warning").clicked() {
-                    self.console_win.write_warning("Warning message example\n");
-                    self.console_win.prompt();
+                ConsoleEvent::KotoScript(script) => {
+                    // This is handled automatically by the embeddable console
+                    if !self.use_embeddable {
+                        self.console_win.write_error("Koto scripting not available in original console mode\n");
+                        self.console_win.prompt();
+                    }
                 }
-
-                if ui.button("Error").clicked() {
-                    self.console_win.write_error("Error message example\n");
-                    self.console_win.prompt();
+                ConsoleEvent::None => {}
+            }
+            
+            // Show Koto examples
+            ui.separator();
+            ui.heading("Koto Scripting Examples");
+            ui.label("Try these Koto scripts in the console:");
+            
+            ui.horizontal_wrapped(|ui| {
+                if ui.button("Basic Math").clicked() && self.use_embeddable {
+                    self.embeddable_console.console_mut().write("koto> print(\"Result:\", 2 + 3 * 4)\n");
+                    self.embeddable_console.console_mut().prompt();
                 }
-
-                if ui.button("Syntax Demo").clicked() {
-                    self.console_win.write_info("Rust Code Example:\n");
-                    let rust_code = "fn main() {\n    println!(\"Hello, world!\");\n    let x = 42;\n}";
-                    self.console_win.write(rust_code);
-                    self.console_win.write("\n");
-                    self.console_win.prompt();
+                
+                if ui.button("Variables").clicked() && self.use_embeddable {
+                    self.embeddable_console.console_mut().write("koto> x = 42; y = x * 2; print(\"x:\", x, \"y:\", y)\n");
+                    self.embeddable_console.console_mut().prompt();
+                }
+                
+                if ui.button("Styled Output").clicked() && self.use_embeddable {
+                    self.embeddable_console.console_mut().write("koto> console.success(\"Success!\"); console.warning(\"Warning!\"); console.error(\"Error!\")\n");
+                    self.embeddable_console.console_mut().prompt();
+                }
+                
+                if ui.button("Theme Change").clicked() && self.use_embeddable {
+                    self.embeddable_console.console_mut().write("koto> set_theme(\"#2d3748\", \"#e2e8f0\")\n");
+                    self.embeddable_console.console_mut().prompt();
+                }
+                
+                if ui.button("Clear Console").clicked() && self.use_embeddable {
+                    self.embeddable_console.console_mut().write("koto> clear_console()\n");
+                    self.embeddable_console.console_mut().prompt();
                 }
             });
         });
     }
 }
+
 impl ConsoleDemo {
+    /// Handle commands for the original console
+    fn handle_original_console_command(&mut self, command: &str, ctx: &egui::Context) {
+        match self.dispatch(command, ctx) {
+            Err(e) => {
+                let error_msg = if let Some(original_error) = e.downcast_ref::<clap::error::Error>() {
+                    format!("{}", original_error)
+                } else if e.backtrace().status() == std::backtrace::BacktraceStatus::Captured {
+                    format!("{} {}", e, e.backtrace())
+                } else {
+                    format!("{}", e)
+                };
+
+                if !error_msg.is_empty() {
+                    self.console_win.write_error(format!("{}\n", error_msg));
+                }
+            },
+            Ok(string) => {
+                if !string.is_empty() {
+                    // Check content to determine appropriate styling
+                    if string.to_lowercase().contains("error") {
+                        self.console_win.write_error(format!("{}\n", string));
+                    } else if string.to_lowercase().contains("success") || 
+                              string.to_lowercase().contains("enabled") {
+                        self.console_win.write_success(format!("{}\n", string));
+                    } else if string.to_lowercase().contains("warning") {
+                        self.console_win.write_warning(format!("{}\n", string));
+                    } else {
+                        self.console_win.write(&format!("{}\n", string));
+                    }
+                }
+            }
+        };
+        self.console_win.prompt();
+    }
+
     pub fn dispatch(&mut self, line: &str, ctx: &egui::Context) -> Result<String> {
         // let args = line.split_whitespace();
         let args = shlex::split(line).ok_or(anyhow::anyhow!("cannot parse"))?;

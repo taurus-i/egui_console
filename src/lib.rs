@@ -10,6 +10,8 @@ mod tab;
 mod syntax_highlighting;
 mod completion;
 mod search;
+pub mod koto_integration;
+pub mod embeddable_console;
 
 pub use crate::console::ConsoleBuilder;
 pub use crate::console::ConsoleEvent;
@@ -19,3 +21,5 @@ pub use crate::console::TerminalTheme;
 pub use crate::console::StyledText;
 pub use crate::syntax_highlighting::Language;
 pub use crate::completion::IntelligentCompletion;
+pub use crate::koto_integration::{KotoRuntime, KotoError, EguiCommand};
+pub use crate::embeddable_console::EmbeddableConsole;

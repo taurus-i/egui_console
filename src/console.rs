@@ -2,6 +2,7 @@ use std::{collections::VecDeque, str::Lines, sync::atomic::AtomicU16};
 use std::ops::Range;
 use egui::{Id, Key, Modifiers, TextEdit, Context, Ui, Color32};
 use egui::{Align, Event, EventFilter};
+use crate::koto_integration::{KotoRuntime, KotoError, EguiCommand};
 
 static SEARCH_PROMPT: &str = "(reverse-i-search) :";
 const SEARCH_PROMPT_SLOT_OFF: usize = 18;
@@ -11,6 +12,8 @@ static INSTANCE_COUNT: AtomicU16 = AtomicU16::new(0);
 pub enum ConsoleEvent {
     /// Command entered by the user
     Command(String),
+    /// Koto script entered by the user
+    KotoScript(String),
     /// No event
     None,
 }
@@ -144,6 +147,85 @@ impl ConsoleWindow {
         self.theme = theme;
     }
 
+    /// Enable koto scripting mode
+    pub fn enable_koto(&mut self) -> Result<(), KotoError> {
+        if self.koto_runtime.is_none() {
+            self.koto_runtime = Some(KotoRuntime::new()?);
+        }
+        self.koto_mode = true;
+        self.write_info("Koto scripting mode enabled. Commands starting with 'koto>' will be executed as Koto scripts.\n");
+        Ok(())
+    }
+
+    /// Disable koto scripting mode
+    pub fn disable_koto(&mut self) {
+        self.koto_mode = false;
+        self.write_info("Koto scripting mode disabled.\n");
+    }
+
+    /// Check if console is in koto mode
+    pub fn is_koto_mode(&self) -> bool {
+        self.koto_mode
+    }
+
+    /// Execute a koto script
+    pub fn execute_koto(&mut self, script: &str) -> Result<String, KotoError> {
+        if let Some(ref mut runtime) = self.koto_runtime {
+            let result = runtime.execute(script)?;
+            
+            // Process egui commands from koto
+            let commands = runtime.get_egui_commands();
+            for command in commands {
+                match command {
+                    EguiCommand::SetTheme { background, foreground } => {
+                        let mut theme = self.theme.clone();
+                        theme.background = background;
+                        theme.foreground = foreground;
+                        self.set_theme(theme);
+                    },
+                    EguiCommand::WriteLine { text, style } => {
+                        match style.as_str() {
+                            "error" => self.write_error(text),
+                            "success" => self.write_success(text),
+                            "warning" => self.write_warning(text),
+                            "info" => self.write_info(text),
+                            _ => self.write(&text),
+                        }
+                    },
+                    EguiCommand::ClearConsole => {
+                        self.clear();
+                    },
+                    EguiCommand::SetWindowTitle { title: _ } => {
+                        // This would need to be handled at the app level
+                    },
+                }
+            }
+            
+            Ok(result)
+        } else {
+            Err(KotoError::Runtime("Koto runtime not initialized".to_string()))
+        }
+    }
+
+    /// Add a global variable to the koto runtime
+    pub fn koto_set_global(&mut self, name: &str, value: String) -> Result<(), KotoError> {
+        if let Some(ref mut runtime) = self.koto_runtime {
+            runtime.set_global(name, value);
+            Ok(())
+        } else {
+            Err(KotoError::Runtime("Koto runtime not initialized".to_string()))
+        }
+    }
+
+    /// Load and execute a koto file
+    pub fn load_koto_file(&mut self, path: &str) -> Result<String, KotoError> {
+        if let Some(ref mut runtime) = self.koto_runtime {
+            runtime.load_file(path)
+        } else {
+            Err(KotoError::Runtime("Koto runtime not initialized".to_string()))
+        }
+    }
+
     // write_code is now implemented in syntax_highlighting.rs
 
     // enhanced_search is now implemented in search.rs
@@ -151,7 +233,7 @@ impl ConsoleWindow {
 /// Console Window  
 ///
 ///
-#[derive(Debug)]
+// #[derive(Debug)]
 pub struct ConsoleWindow {
     pub(crate) text: String,
     pub(crate) force_cursor_to_end: bool,
@@ -181,6 +263,10 @@ pub struct ConsoleWindow {
 
     // Intelligent completion
     pub(crate) intelligent_completion: Option<crate::IntelligentCompletion>,
+
+    // Koto scripting integration
+    pub(crate) koto_runtime: Option<KotoRuntime>,
+    pub(crate) koto_mode: bool,
 }
 
 impl ConsoleWindow {
@@ -211,6 +297,9 @@ impl ConsoleWindow {
                     styled_segments: Vec::new(),
                     theme: TerminalTheme::default(),
                     intelligent_completion: None,
+
+            koto_runtime: None,
+            koto_mode: false,
         }
     }
     /// Draw the console window
@@ -698,6 +787,15 @@ impl ConsoleWindow {
         }
 
         if let Some(command) = command {
+            // Check if this is a koto script
+            if self.koto_mode || command.starts_with("koto>") {
+                let script = if command.starts_with("koto>") {
+                    command.strip_prefix("koto>").unwrap_or(&command).trim()
+                } else {
+                    &command
+                };
+                return ConsoleEvent::KotoScript(script.to_string());
+            }
             return ConsoleEvent::Command(command);
         }
         ConsoleEvent::None

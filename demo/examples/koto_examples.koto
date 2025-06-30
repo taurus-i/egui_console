@@ -1,0 +1,87 @@
+# 🎯 Real Koto Language Examples
+# This file demonstrates actual Koto language features!
+
+print("=== 🚀 Welcome to Real Koto Integration! ===")
+console.success("No more stubs! This is the real Koto engine!")
+
+# 1. Basic arithmetic and variables
+print("\n1. Mathematics & Variables:")
+x = 10
+y = 5
+print("x =", x, ", y =", y)
+print("x + y =", x + y)
+print("x * y =", x * y)
+
+# 2. String manipulation
+print("\n2. String Operations:")
+first_name = "Koto"
+last_name = "Script"
+full_name = first_name + " " + last_name
+print("Full name:", full_name)
+
+# 3. Lists and iteration
+print("\n3. Lists & Iteration:")
+fruits = ["apple", "banana", "cherry", "date"]
+print("Fruits:", fruits)
+print("First fruit:", fruits[0])
+
+print("Iterating through fruits:")
+for fruit in fruits
+    console.info("  - " + fruit)
+
+# 4. Functions and closures
+print("\n4. Functions:")
+square = |n| n * n
+print("Square of 7:", square(7))
+
+# 5. Maps/Objects
+print("\n5. Objects & Maps:")
+person = {
+    name: "Alice",
+    age: 30,
+    active: true
+}
+
+print("Person:", person)
+print("Name:", person.name)
+console.success(person.name + " is active!")
+
+# 6. Conditional logic
+print("\n6. Conditional Logic:")
+score = 85
+if score >= 80
+    console.success("Good job!")
+else
+    console.warning("Could be better...")
+
+# 7. Advanced features
+print("\n7. Lists Processing:")
+numbers = [1, 2, 3, 4, 5]
+print("Original:", numbers)
+
+# 8. Console styling showcase
+print("\n8. Console Styling:")
+console.info("ℹ️  Information: Koto integration is working!")
+console.success("✅ Success: All features are functional!")
+console.warning("⚠️  Warning: This is just a demo!")
+console.error("❌ Error: Just kidding, everything is fine!")
+
+# 9. Theme demonstration
+print("\n9. Theme Test:")
+print("Changing theme to blue...")
+set_theme("#001122", "#4488cc")
+console.info("Theme changed! Notice the new colors?")
+
+print("\nChanging back to default...")
+set_theme("#1a1a1a", "#ffffff")
+console.success("Back to default theme!")
+
+# Final message
+print("\n" + "=".repeat(50))
+console.success("🎉 Congratulations! Real Koto is now integrated!")
+console.info("📚 Try writing your own Koto scripts!")
+console.warning("🔧 This console supports the full Koto language!")
+print("=".repeat(50))
+
+# Uncomment to clear console:
+# clear_console() 
