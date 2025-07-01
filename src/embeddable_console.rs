@@ -102,6 +102,9 @@ impl EmbeddableConsole {
             .default_height(400.0)
             .resizable(true)
             .show(ctx, |ui| {
+                // Apply theme to window background
+                ui.style_mut().visuals.window_fill = self.console.theme.background;
+                ui.style_mut().visuals.panel_fill = self.console.theme.background;
                 event = self.draw_inline(ui);
             });
 
@@ -174,7 +177,8 @@ impl EmbeddableConsole {
                 self.console.write("  console.success(...) - Print success message\n");
                 self.console.write("  console.warning(...) - Print warning message\n");
                 self.console.write("  console.error(...)   - Print error message\n");
-                self.console.write("  set_theme(bg, fg)    - Set theme colors\n");
+                self.console.write("  set_theme(name)      - Set preset theme (dark, light, matrix, etc.)\n");
+                self.console.write("  set_theme(bg, fg)    - Set custom background/foreground colors\n");
                 self.console.write("  clear_console()      - Clear console\n");
             }
             "clear" => {
@@ -213,7 +217,7 @@ impl EmbeddableConsole {
                 if parts.len() > 1 {
                     self.set_theme(parts[1]);
                 } else {
-                    self.console.write("Available themes: dark, light, dracula\n");
+                    self.console.write("Available themes: dark, light, dracula, solarized, nord, matrix, ocean, cyberpunk\n");
                 }
             }
             _ => {
@@ -230,10 +234,22 @@ impl EmbeddableConsole {
             return;
         }
 
+        // Check if this is actually a built-in command first
+        let trimmed_script = script.trim();
+        if self.is_builtin_command(trimmed_script) {
+            self.handle_builtin_command(trimmed_script);
+            return;
+        }
+
+        // Execute as Koto script
         match self.console.execute_koto(script) {
             Ok(result) => {
                 if !result.trim().is_empty() {
                     self.console.write(&result);
+                }
+                // Provide feedback for successful theme changes
+                if script.contains("set_theme") {
+                    self.console.write_success("🎨 Theme applied! You should see visual changes now.\n");
                 }
             }
             Err(e) => {
@@ -241,6 +257,17 @@ impl EmbeddableConsole {
             }
         }
         self.console.prompt();
+    }
+
+    /// Check if a command is a built-in command
+    fn is_builtin_command(&self, command: &str) -> bool {
+        let parts: Vec<&str> = command.trim().split_whitespace().collect();
+        if parts.is_empty() {
+            return false;
+        }
+
+        // Note: 'set_theme' is a Koto function, not a built-in command
+        matches!(parts[0], "help" | "clear" | "history" | "koto_mode" | "theme")
     }
 
     /// Set console theme
@@ -278,6 +305,61 @@ impl EmbeddableConsole {
                 warning: egui::Color32::from_rgb(241, 250, 140),
                 info: egui::Color32::from_rgb(139, 233, 253),
                 prompt: egui::Color32::from_rgb(189, 147, 249),
+            },
+            "solarized" => TerminalTheme {
+                background: egui::Color32::from_rgb(0, 43, 54),
+                foreground: egui::Color32::from_rgb(131, 148, 150),
+                selection: egui::Color32::from_rgb(7, 54, 66),
+                cursor: egui::Color32::from_rgb(131, 148, 150),
+                error: egui::Color32::from_rgb(220, 50, 47),
+                success: egui::Color32::from_rgb(133, 153, 0),
+                warning: egui::Color32::from_rgb(181, 137, 0),
+                info: egui::Color32::from_rgb(38, 139, 210),
+                prompt: egui::Color32::from_rgb(108, 113, 196),
+            },
+            "nord" => TerminalTheme {
+                background: egui::Color32::from_rgb(46, 52, 64),
+                foreground: egui::Color32::from_rgb(216, 222, 233),
+                selection: egui::Color32::from_rgb(67, 76, 94),
+                cursor: egui::Color32::from_rgb(216, 222, 233),
+                error: egui::Color32::from_rgb(191, 97, 106),
+                success: egui::Color32::from_rgb(163, 190, 140),
+                warning: egui::Color32::from_rgb(235, 203, 139),
+                info: egui::Color32::from_rgb(129, 161, 193),
+                prompt: egui::Color32::from_rgb(180, 142, 173),
+            },
+            "matrix" => TerminalTheme {
+                background: egui::Color32::from_rgb(0, 0, 0),
+                foreground: egui::Color32::from_rgb(0, 255, 65),
+                selection: egui::Color32::from_rgb(0, 100, 25),
+                cursor: egui::Color32::from_rgb(0, 255, 65),
+                error: egui::Color32::from_rgb(255, 65, 65),
+                success: egui::Color32::from_rgb(0, 255, 100),
+                warning: egui::Color32::from_rgb(255, 255, 0),
+                info: egui::Color32::from_rgb(100, 255, 150),
+                prompt: egui::Color32::from_rgb(0, 200, 50),
+            },
+            "ocean" => TerminalTheme {
+                background: egui::Color32::from_rgb(15, 42, 66),
+                foreground: egui::Color32::from_rgb(171, 196, 219),
+                selection: egui::Color32::from_rgb(45, 72, 96),
+                cursor: egui::Color32::from_rgb(171, 196, 219),
+                error: egui::Color32::from_rgb(255, 102, 102),
+                success: egui::Color32::from_rgb(102, 204, 204),
+                warning: egui::Color32::from_rgb(255, 204, 102),
+                info: egui::Color32::from_rgb(102, 153, 255),
+                prompt: egui::Color32::from_rgb(153, 102, 255),
+            },
+            "cyberpunk" => TerminalTheme {
+                background: egui::Color32::from_rgb(16, 0, 43),
+                foreground: egui::Color32::from_rgb(255, 20, 147),
+                selection: egui::Color32::from_rgb(75, 0, 130),
+                cursor: egui::Color32::from_rgb(255, 20, 147),
+                error: egui::Color32::from_rgb(255, 69, 0),
+                success: egui::Color32::from_rgb(50, 205, 50),
+                warning: egui::Color32::from_rgb(255, 215, 0),
+                info: egui::Color32::from_rgb(0, 191, 255),
+                prompt: egui::Color32::from_rgb(238, 130, 238),
             },
             _ => {
                 self.console.write_error(&format!("Unknown theme: {}\n", theme_name));

@@ -190,13 +190,48 @@ impl eframe::App for ConsoleDemo {
                     self.embeddable_console.console_mut().prompt();
                 }
                 
-                if ui.button("Theme Change").clicked() && self.use_embeddable {
-                    self.embeddable_console.console_mut().write("koto> set_theme(\"#2d3748\", \"#e2e8f0\")\n");
+                if ui.button("Clear Console").clicked() && self.use_embeddable {
+                    self.embeddable_console.console_mut().write("koto> clear_console()\n");
+                    self.embeddable_console.console_mut().prompt();
+                }
+            });
+
+            ui.separator();
+            ui.heading("🎨 Enhanced Theme Examples");
+            
+            ui.horizontal_wrapped(|ui| {
+                if ui.button("Matrix Theme").clicked() && self.use_embeddable {
+                    self.embeddable_console.console_mut().write("koto> set_theme(\"matrix\")\n");
                     self.embeddable_console.console_mut().prompt();
                 }
                 
-                if ui.button("Clear Console").clicked() && self.use_embeddable {
-                    self.embeddable_console.console_mut().write("koto> clear_console()\n");
+                if ui.button("Cyberpunk Theme").clicked() && self.use_embeddable {
+                    self.embeddable_console.console_mut().write("koto> set_theme(\"cyberpunk\")\n");
+                    self.embeddable_console.console_mut().prompt();
+                }
+                
+                if ui.button("Ocean Theme").clicked() && self.use_embeddable {
+                    self.embeddable_console.console_mut().write("koto> set_theme(\"ocean\")\n");
+                    self.embeddable_console.console_mut().prompt();
+                }
+                
+                if ui.button("Nord Theme").clicked() && self.use_embeddable {
+                    self.embeddable_console.console_mut().write("koto> set_theme(\"nord\")\n");
+                    self.embeddable_console.console_mut().prompt();
+                }
+                
+                if ui.button("Solarized Theme").clicked() && self.use_embeddable {
+                    self.embeddable_console.console_mut().write("koto> set_theme(\"solarized\")\n");
+                    self.embeddable_console.console_mut().prompt();
+                }
+                
+                if ui.button("Custom Colors").clicked() && self.use_embeddable {
+                    self.embeddable_console.console_mut().write("koto> set_theme(\"#ff6b6b\", \"#4ecdc4\")\n");
+                    self.embeddable_console.console_mut().prompt();
+                }
+                
+                if ui.button("Reset to Dark").clicked() && self.use_embeddable {
+                    self.embeddable_console.console_mut().write("koto> set_theme(\"dark\")\n");
                     self.embeddable_console.console_mut().prompt();
                 }
             });
@@ -327,6 +362,28 @@ impl ConsoleDemo {
                     };
                     result.push_str(&format!("  {} - {}\n", name, about));
                 }
+                Ok(result)
+            }
+            Some(("help", _)) => {
+                let mut result = String::from("Enhanced Terminal Help\n");
+                result.push_str("======================\n\n");
+                result.push_str("Available commands:\n");
+                for cmd in syntax().get_subcommands() {
+                    let name = cmd.get_name();
+                    let aliases: Vec<&str> = cmd.get_visible_aliases().collect();
+                    let about = match cmd.get_about() {
+                        Some(about) => about.to_string(),
+                        None => String::new(),
+                    };
+                    
+                    let mut cmd_line = format!("  {}", name);
+                    if !aliases.is_empty() {
+                        cmd_line.push_str(&format!(" ({})", aliases.join(", ")));
+                    }
+                    cmd_line.push_str(&format!(" - {}\n", about));
+                    result.push_str(&cmd_line);
+                }
+                result.push_str("\nNote: Switch to 'Embeddable (with Koto)' mode for Koto scripting features!\n");
                 Ok(result)
             }
                             Some(("codeview", args)) => {

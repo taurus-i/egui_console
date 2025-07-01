@@ -183,6 +183,9 @@ impl ConsoleWindow {
                         theme.foreground = foreground;
                         self.set_theme(theme);
                     },
+                    EguiCommand::SetFullTheme { theme } => {
+                        self.set_theme(theme);
+                    },
                     EguiCommand::WriteLine { text, style } => {
                         match style.as_str() {
                             "error" => self.write_error(text),
@@ -424,7 +427,18 @@ impl ConsoleWindow {
     }
     fn ui(&mut self, ui: &mut egui::Ui) {
         egui::ScrollArea::both().show(ui, |ui| {
+            // Apply theme background color to the scroll area
+            ui.style_mut().visuals.extreme_bg_color = self.theme.background;
+            ui.style_mut().visuals.code_bg_color = self.theme.background;
+            
             ui.add_sized(ui.available_size(), |ui: &mut Ui| {
+                // Apply theme colors to the text editor
+                ui.style_mut().visuals.extreme_bg_color = self.theme.background;
+                ui.style_mut().visuals.code_bg_color = self.theme.background;
+                ui.style_mut().visuals.override_text_color = Some(self.theme.foreground);
+                ui.style_mut().visuals.selection.bg_fill = self.theme.selection;
+                ui.style_mut().visuals.selection.stroke.color = self.theme.cursor;
+                
                 let widget = egui::TextEdit::multiline(&mut self.text)
                     .font(egui::TextStyle::Monospace)
                     .frame(false)

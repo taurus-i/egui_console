@@ -1,0 +1,97 @@
+# 🎨 Enhanced Theme Showcase for Koto Console
+# This file demonstrates the enhanced theme functionality
+
+print("=== 🎨 Enhanced Theme System Demo ===")
+console.success("Now supporting multiple ways to set themes!")
+
+# Method 1: Preset theme names (NEW!)
+print("\n1. 🌟 Preset Themes:")
+console.info("Testing preset theme names...")
+
+print("Switching to 'dark' theme...")
+set_theme("dark")
+console.success("Dark theme applied!")
+
+print("\nSwitching to 'light' theme...")
+set_theme("light")
+console.info("Light theme applied!")
+
+print("\nSwitching to 'dracula' theme...")
+set_theme("dracula")
+console.success("Dracula theme applied!")
+
+print("\nSwitching to 'solarized' theme...")
+set_theme("solarized")
+console.info("Solarized theme applied!")
+
+print("\nSwitching to 'nord' theme...")
+set_theme("nord")
+console.success("Nord theme applied!")
+
+print("\nSwitching to 'matrix' theme...")
+set_theme("matrix")
+console.success("MATRIX MODE ACTIVATED!")
+
+print("\nSwitching to 'ocean' theme...")
+set_theme("ocean")
+console.info("Ocean theme applied!")
+
+print("\nSwitching to 'cyberpunk' theme...")
+set_theme("cyberpunk")
+console.error("CYBERPUNK 2077 MODE!")
+
+# Method 2: Custom colors (backward compatible)
+print("\n2. 🎯 Custom Colors:")
+console.info("Testing custom background and foreground colors...")
+
+set_theme("#ff6b6b", "#4ecdc4")
+console.success("Custom coral & teal theme!")
+
+set_theme("#2c3e50", "#ecf0f1")
+console.info("Elegant dark blue theme!")
+
+set_theme("#8e44ad", "#f1c40f")
+console.warning("Purple & gold theme!")
+
+# Method 3: Full theme objects (NEW FEATURE - coming soon!)
+print("\n3. 🛠️ Future Feature Preview:")
+console.info("In the future, you'll be able to define complete themes like this:")
+print("custom_theme = {")
+print("  background: \"#1a1a2e\",")
+print("  foreground: \"#eee\",")
+print("  error: \"#ff4757\",")
+print("  success: \"#2ed573\",")
+print("  warning: \"#ffa502\",")
+print("  info: \"#3742fa\",")
+print("  prompt: \"#ff6348\"")
+print("}")
+print("set_theme(custom_theme)")
+
+# Showcase all styles with current theme
+print("\n4. 🎭 Style Showcase:")
+console.info("ℹ️  Info messages look like this")
+console.success("✅ Success messages look like this")
+console.warning("⚠️  Warning messages look like this")
+console.error("❌ Error messages look like this")
+print("📝 Normal text looks like this")
+
+# Available themes summary
+print("\n5. 📚 Available Preset Themes:")
+themes = ["dark", "light", "dracula", "solarized", "nord", "matrix", "ocean", "cyberpunk"]
+for theme in themes
+    console.info("  - " + theme)
+
+print("\n6. 🚀 Usage Examples:")
+console.success("set_theme(\"dark\")        # Apply dark theme")
+console.success("set_theme(\"matrix\")      # Go green like The Matrix")
+console.success("set_theme(\"#000\", \"#0f0\") # Custom black & green")
+
+# Reset to default
+print("\nResetting to default dark theme...")
+set_theme("dark")
+console.success("🎉 Theme showcase complete!")
+
+print("\n" + "=".repeat(60))
+console.info("💡 Pro tip: You can also use 'theme <name>' command!")
+console.info("💡 Try: theme matrix, theme cyberpunk, theme ocean")
+print("=".repeat(60)) 

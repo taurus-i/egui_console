@@ -92,6 +92,12 @@ pub fn syntax() -> Command {
                 .help_template(APPLET_TEMPLATE),
         )
         .subcommand(
+            Command::new("help")
+                .visible_aliases(["h", "?"])
+                .about("Show help message")
+                .help_template(APPLET_TEMPLATE),
+        )
+        .subcommand(
             Command::new("theme")
                 .about("Change terminal theme")
                 .arg(arg!([name] "Theme name (dark, light, dracula, solarized, nord)"))
